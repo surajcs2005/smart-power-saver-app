@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Alerts - Smart Power Saver{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1><i class="fas fa-bell"></i> Notifications</h1>
+        <div>
+            <label class="form-group" style="display:flex;align-items:center;gap:.5rem;">
+                <span>Threshold (W)</span>
+                <input id="notif-threshold" type="number" value="250" class="form-input" style="width:120px" />
+            </label>
+        </div>
+    </div>
+    <div id="alerts" class="device-list"></div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    function loadAlerts(){
+        const thr = document.getElementById('notif-threshold').value || 250;
+        fetch(`/api/notifications/?threshold=${thr}`)
+            .then(r=>r.json())
+            .then(json=>{
+                const wrap = document.getElementById('alerts');
+                wrap.innerHTML='';
+                json.alerts.forEach(a=>{
+                    const el = document.createElement('div');
+                    el.className = 'device-item fade-in';
+                    el.style.borderLeft = '3px solid #ef4444';
+                    el.innerHTML = `
+                        <div class="device-info">
+                            <div class="device-icon" style="background:linear-gradient(135deg,#f43f5e,#ef4444)"><i class="fas fa-bolt"></i></div>
+                            <div class="device-details">
+                                <h4>${a.device}</h4>
+                                <p>${a.room || ''} • ${new Date(a.timestamp).toLocaleString()}</p>
+                            </div>
+                        </div>
+                        <div class="device-actions">
+                            <span class="device-status offline"><i class="fas fa-fire"></i> High ${a.power_watts}W</span>
+                            <button class="btn btn-primary" onclick="toggleDevice(${a.device_id})"><i class="fas fa-power-off"></i></button>
+                        </div>`;
+                    wrap.appendChild(el);
+                })
+            })
+    }
+    document.getElementById('notif-threshold').addEventListener('input', ()=>{
+        clearTimeout(window.__thrT);
+        window.__thrT = setTimeout(loadAlerts, 400);
+    });
+    loadAlerts();
+});
+</script>
+{% endblock %}
+

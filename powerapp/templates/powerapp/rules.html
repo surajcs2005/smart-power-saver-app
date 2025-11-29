@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Automation Rules - Smart Power Saver{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1><i class="fas fa-robot"></i> Automation Rules</h1>
+        <button class="btn btn-primary" onclick="openRuleModal()"><i class="fas fa-plus"></i> Add New Rule</button>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <h2><i class="fas fa-list"></i> Rules</h2>
+        </div>
+        <div class="panel-content">
+            <div class="device-list" id="rules-list">
+                <!-- Example rule item -->
+                <div class="device-item">
+                    <div class="device-info">
+                        <div class="device-icon"><i class="fas fa-clock"></i></div>
+                        <div class="device-details">
+                            <h4>Turn off Living Room Light at 11:00 PM</h4>
+                            <p>Daily • Living Room</p>
+                        </div>
+                    </div>
+                    <div class="device-actions">
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <button class="btn btn-sm btn-secondary"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <h2><i class="fas fa-timeline"></i> Schedule Timeline</h2>
+        </div>
+        <div class="panel-content">
+            <div class="timeline" style="height:200px; background: linear-gradient(90deg, rgba(37,99,235,0.15), rgba(16,185,129,0.15)); border-radius: 8px;"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="rule-modal" class="modal" style="display:none">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Add New Rule</h3>
+            <span class="close" onclick="closeRuleModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Device</label>
+                <input class="form-input" placeholder="e.g., Living Room Light" />
+            </div>
+            <div class="form-group">
+                <label>Action</label>
+                <select class="form-select"><option>Turn ON</option><option>Turn OFF</option></select>
+            </div>
+            <div class="form-group">
+                <label>Time</label>
+                <input type="time" class="form-input" />
+            </div>
+            <div class="form-group">
+                <label>Repeat</label>
+                <select class="form-select"><option>Daily</option><option>Weekdays</option><option>Weekends</option></select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeRuleModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveRule()">Save Rule</button>
+        </div>
+    </div>
+    <script>
+        function openRuleModal(){ document.getElementById('rule-modal').style.display='block'; }
+        function closeRuleModal(){ document.getElementById('rule-modal').style.display='none'; }
+        function saveRule(){ closeRuleModal(); }
+    </script>
+</div>
+{% endblock %}
+

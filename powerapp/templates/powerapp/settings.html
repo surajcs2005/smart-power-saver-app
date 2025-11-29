@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% block title %}Settings - Smart Power Saver{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <div class="settings-header">
+        <h1><i class="fas fa-cog"></i> System Settings</h1>
+    </div>
+
+    <div class="settings-grid">
+        <!-- General Settings -->
+        <div class="panel settings-panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-sliders-h"></i> General Settings</h2>
+            </div>
+            <div class="panel-content">
+                <form class="settings-form">
+                    <div class="form-group">
+                        <label for="system-name">System Name</label>
+                        <input type="text" id="system-name" class="form-input" value="Smart Power Saver">
+                    </div>
+                    <div class="form-group">
+                        <label for="timezone">Timezone</label>
+                        <select id="timezone" class="form-select">
+                            <option value="UTC">UTC</option>
+                            <option value="EST">Eastern Time</option>
+                            <option value="PST">Pacific Time</option>
+                            <option value="CST">Central Time</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="refresh-interval">Data Refresh Interval</label>
+                        <select id="refresh-interval" class="form-select">
+                            <option value="5">5 seconds</option>
+                            <option value="10">10 seconds</option>
+                            <option value="30">30 seconds</option>
+                            <option value="60">1 minute</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="auto-save" checked>
+                            <span class="checkmark"></span>
+                            Auto-save settings
+                        </label>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Device Management -->
+        <div class="panel device-management-panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-microchip"></i> Device Management</h2>
+                <div class="panel-actions">
+                    <button class="btn btn-primary" onclick="addDevice()">
+                        <i class="fas fa-plus"></i> Add Device
+                    </button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div class="device-list">
+                    <div class="device-item">
+                        <div class="device-info">
+                            <div class="device-icon">
+                                <i class="fas fa-lightbulb"></i>
+                            </div>
+                            <div class="device-details">
+                                <h4>Living Room Light</h4>
+                                <p>Room: Living Room</p>
+                            </div>
+                        </div>
+                        <div class="device-actions">
+                            <button class="btn btn-sm btn-secondary" onclick="editDevice(1)">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteDevice(1)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="device-item">
+                        <div class="device-info">
+                            <div class="device-icon">
+                                <i class="fas fa-tv"></i>
+                            </div>
+                            <div class="device-details">
+                                <h4>Smart TV</h4>
+                                <p>Room: Living Room</p>
+                            </div>
+                        </div>
+                        <div class="device-actions">
+                            <button class="btn btn-sm btn-secondary" onclick="editDevice(2)">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteDevice(2)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Power Management -->
+        <div class="panel power-settings-panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-bolt"></i> Power Management</h2>
+            </div>
+            <div class="panel-content">
+                <form class="power-settings-form">
+                    <div class="form-group">
+                        <label for="power-threshold">Power Threshold (Watts)</label>
+                        <input type="number" id="power-threshold" class="form-input" value="5" min="0" max="1000">
+                        <small>Devices consuming less than this amount will be considered "off"</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="cost-per-kwh">Cost per kWh (₹)</label>
+                        <input type="number" id="cost-per-kwh" class="form-input" value="6.0" step="0.1" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="auto-shutdown" checked>
+                            <span class="checkmark"></span>
+                            Auto-shutdown idle devices
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="power-alerts">
+                            <span class="checkmark"></span>
+                            Enable power consumption alerts
+                        </label>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="panel notifications-panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-bell"></i> Notifications</h2>
+            </div>
+            <div class="panel-content">
+                <form class="notifications-form">
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="email-notifications" checked>
+                            <span class="checkmark"></span>
+                            Email notifications
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="browser-notifications">
+                            <span class="checkmark"></span>
+                            Browser notifications
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="notification-email">Notification Email</label>
+                        <input type="email" id="notification-email" class="form-input" placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="high-usage-alerts" checked>
+                            <span class="checkmark"></span>
+                            High usage alerts
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="device-offline-alerts" checked>
+                            <span class="checkmark"></span>
+                            Device offline alerts
+                        </label>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-actions">
+        <button class="btn btn-primary" onclick="saveSettings()">
+            <i class="fas fa-save"></i> Save Settings
+        </button>
+        <button class="btn btn-secondary" onclick="resetSettings()">
+            <i class="fas fa-undo"></i> Reset to Defaults
+        </button>
+    </div>
+</div>
+
+<!-- Add Device Modal -->
+<div id="add-device-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Add New Device</h3>
+            <span class="close" onclick="closeAddDeviceModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="add-device-form">
+                <div class="form-group">
+                    <label for="device-name">Device Name</label>
+                    <input type="text" id="device-name" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="device-room">Room</label>
+                    <input type="text" id="device-room" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label for="device-type">Device Type</label>
+                    <select id="device-type" class="form-select">
+                        <option value="light">Light</option>
+                        <option value="appliance">Appliance</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="heating">Heating/Cooling</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="device-power">Expected Power (Watts)</label>
+                    <input type="number" id="device-power" class="form-input" min="0" step="0.1">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeAddDeviceModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveNewDevice()">Add Device</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

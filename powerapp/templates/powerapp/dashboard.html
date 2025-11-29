@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - Smart Power Saver{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Header Section -->
+    <div class="dashboard-header">
+        <h1><i class="fas fa-tachometer-alt"></i> Power Management Dashboard</h1>
+        <div class="header-stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-plug"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-number" id="total-devices">0</span>
+                    <span class="stat-label">Total Devices</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-power-off"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-number" id="active-devices">0</span>
+                    <span class="stat-label">Active Devices</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-number" id="total-power">0W</span>
+                    <span class="stat-label">Total Power</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-rupee-sign"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-number" id="savings">₹0</span>
+                    <span class="stat-label">Monthly Savings</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="dashboard-grid">
+        <!-- Device Control Panel -->
+        <div class="panel device-panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-microchip"></i> Device Control</h2>
+                <div class="panel-actions">
+                    <button class="btn btn-primary" onclick="refreshDevices()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div class="device-toolbar">
+                    <div class="toolbar-left">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input id="device-search" type="text" placeholder="Search devices or rooms..." />
+                        </div>
+                        <select id="room-filter" class="form-select form-select-sm">
+                            <option value="">All rooms</option>
+                            <option>Living Room</option>
+                            <option>Kitchen</option>
+                            <option>Bedroom</option>
+                            <option>Office</option>
+                            <option>Laundry</option>
+                        </select>
+                        <select id="status-filter" class="form-select form-select-sm">
+                            <option value="">All statuses</option>
+                            <option value="on">On</option>
+                            <option value="off">Off</option>
+                        </select>
+                    </div>
+                    <div class="toolbar-right">
+                        <span class="muted" id="device-count">0 devices</span>
+                    </div>
+                </div>
+                <div id="devices" class="device-list glass-surface">
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Loading devices...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Power Usage Chart -->
+        <div class="panel chart-panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-chart-bar"></i> Power Usage</h2>
+                <div class="chart-controls">
+                    <select id="chart-timeframe" class="form-select">
+                        <option value="realtime">Real-time</option>
+                        <option value="hourly">Hourly</option>
+                        <option value="daily">Daily</option>
+                    </select>
+                </div>
+            </div>
+            <div class="panel-content">
+                <canvas id="mainChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Energy Analytics -->
+        <div class="panel analytics-panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-chart-line"></i> Energy Analytics</h2>
+            </div>
+            <div class="panel-content">
+                <div class="analytics-grid">
+                    <div class="analytics-item">
+                        <div class="analytics-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="analytics-info">
+                            <span class="analytics-value" id="avg-usage">0W</span>
+                            <span class="analytics-label">Average Usage</span>
+                        </div>
+                    </div>
+                    <div class="analytics-item">
+                        <div class="analytics-icon">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="analytics-info">
+                            <span class="analytics-value" id="peak-usage">0W</span>
+                            <span class="analytics-label">Peak Usage</span>
+                        </div>
+                    </div>
+                    <div class="analytics-item">
+                        <div class="analytics-icon">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="analytics-info">
+                            <span class="analytics-value" id="daily-usage">0kWh</span>
+                            <span class="analytics-label">Today's Usage</span>
+                        </div>
+                    </div>
+                    <div class="analytics-item">
+                        <div class="analytics-icon">
+                            <i class="fas fa-battery-half"></i>
+                        </div>
+                        <div class="analytics-info">
+                            <span class="analytics-value" id="efficiency">0%</span>
+                            <span class="analytics-label">Efficiency</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="panel activity-panel">
+            <div class="panel-header">
+                <h2><i class="fas fa-history"></i> Recent Activity</h2>
+            </div>
+            <div class="panel-content">
+                <div id="activity-feed" class="activity-feed">
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="activity-content">
+                            <span class="activity-text">System initialized</span>
+                            <span class="activity-time">Just now</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Device Modal -->
+<div id="device-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modal-title">Device Details</h3>
+            <span class="close" onclick="closeModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="modal-device-info"></div>
+            <canvas id="deviceChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}

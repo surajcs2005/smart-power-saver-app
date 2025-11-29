@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Historical Data - Smart Power Saver{% endblock %}
+
+{% block content %}
+<div class="analytics-page">
+    <aside class="analytics-sidebar glass-surface">
+        <div class="sidebar-header"><h3><i class="fas fa-filter"></i> Filters</h3></div>
+        <div class="sidebar-content">
+            <div class="form-group">
+                <label>Range</label>
+                <select id="hist-range" class="form-select">
+                    <option value="30">Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Device IDs</label>
+                <input id="hist-devices" class="form-input" placeholder="1,2,3" />
+            </div>
+            <button id="hist-apply" class="btn btn-primary" style="width:100%"><i class="fas fa-play"></i> Apply</button>
+            <button id="hist-export" class="btn btn-secondary" style="width:100%;margin-top:.5rem"><i class="fas fa-file-csv"></i> Export CSV</button>
+        </div>
+    </aside>
+    <section class="analytics-main">
+        <div class="panel"><div class="panel-header"><h2><i class="fas fa-chart-line"></i> Line Chart</h2></div><div class="panel-content" style="height:320px"><canvas id="hist-line"></canvas></div></div>
+        <div class="panel"><div class="panel-header"><h2><i class="fas fa-border-all"></i> Heatmap</h2></div><div class="panel-content" style="overflow:auto"><div id="heatmap" style="display:grid;grid-template-columns:repeat(24,1fr);gap:2px"></div></div></div>
+    </section>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    const lineCtx = document.getElementById('hist-line');
+    let lineChart;
+    function fetchLine(){
+        // reuse usage summary daily series
+        const range = parseInt(document.getElementById('hist-range').value || '30');
+        const now = new Date(); const start = new Date(now.getTime()-range*24*3600*1000);
+        const params = new URLSearchParams({start:start.toISOString(), end:now.toISOString()});
+        const devices = document.getElementById('hist-devices').value;
+        if (devices) devices.split(',').map(x=>x.trim()).filter(Boolean).forEach(d=>params.append('device', d));
+        fetch('/api/usage/summary/?'+params.toString()).then(r=>r.json()).then(s=>{
+            const labels = (s.daily||[]).map(x=>new Date(x.date).toLocaleDateString());
+            const data = (s.daily||[]).map(x=>x.value);
+            lineChart && lineChart.destroy();
+            lineChart = new Chart(lineCtx, {type:'line', data:{labels, datasets:[{data, borderColor:'#22d3ee', backgroundColor:'rgba(34,211,238,.2)', fill:true, tension:.35}]}, options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}}});
+        });
+    }
+    function fetchHeat(){
+        const range = parseInt(document.getElementById('hist-range').value || '30');
+        const now = new Date(); const start = new Date(now.getTime()-range*24*3600*1000);
+        const params = new URLSearchParams({start:start.toISOString(), end:now.toISOString()});
+        const devices = document.getElementById('hist-devices').value;
+        if (devices) devices.split(',').map(x=>x.trim()).filter(Boolean).forEach(d=>params.append('device', d));
+        fetch('/api/heatmap/?'+params.toString()).then(r=>r.json()).then(s=>{
+            const grid = document.getElementById('heatmap'); grid.innerHTML='';
+            // Build a simple hour grid for the last day seen
+            s.heatmap.slice(0,24).forEach(c=>{
+                const cell = document.createElement('div');
+                const val = Math.min(1, c.value/300); // normalize
+                cell.style.cssText = `height:28px;border-radius:4px;background: rgba(99,102,241,${val});`;
+                cell.title = `${c.date} ${c.hour}:00 • ${c.value}W`;
+                grid.appendChild(cell);
+            })
+        });
+    }
+    document.getElementById('hist-apply').addEventListener('click', ()=>{ fetchLine(); fetchHeat(); });
+    document.getElementById('hist-export').addEventListener('click', ()=>{
+        // Simple CSV from daily series
+        const range = parseInt(document.getElementById('hist-range').value || '30');
+        const now = new Date(); const start = new Date(now.getTime()-range*24*3600*1000);
+        const params = new URLSearchParams({start:start.toISOString(), end:now.toISOString()});
+        fetch('/api/usage/summary/?'+params.toString()).then(r=>r.json()).then(s=>{
+            const rows = [['date','avg_watts']].concat((s.daily||[]).map(x=>[x.date,x.value]));
+            const csv = rows.map(r=>r.join(',')).join('\n');
+            const blob = new Blob([csv], {type:'text/csv'}); const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href=url; a.download='energy_daily.csv'; a.click(); URL.revokeObjectURL(url);
+        });
+    });
+    fetchLine(); fetchHeat();
+});
+</script>
+{% endblock %}
+

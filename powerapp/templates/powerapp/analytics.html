@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% block title %}Analytics - Smart Power Saver{% endblock %}
+
+{% block content %}
+<div class="analytics-page">
+    <aside class="analytics-sidebar glass-surface">
+        <div class="sidebar-header">
+            <h3><i class="fas fa-filter"></i> Filters</h3>
+        </div>
+        <div class="sidebar-content">
+            <div class="form-group">
+                <label>Time Range</label>
+                <select id="analytics-range" class="form-select">
+                    <option value="30d">Last 30 Days</option>
+                    <option value="90d">Last 90 Days</option>
+                    <option value="180d">Last 6 Months</option>
+                    <option value="365d">Last 12 Months</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Room</label>
+                <select id="analytics-room" class="form-select">
+                    <option value="">All Rooms</option>
+                    <option>Living Room</option>
+                    <option>Kitchen</option>
+                    <option>Bedroom</option>
+                    <option>Office</option>
+                    <option>Laundry</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Devices</label>
+                <input id="analytics-devices" class="form-input" placeholder="Comma-separated IDs e.g. 1,2,3" />
+            </div>
+            <button id="apply-analytics" class="btn btn-primary" style="width:100%">
+                <i class="fas fa-play"></i> Apply
+            </button>
+        </div>
+    </aside>
+
+    <section class="analytics-main">
+        <div class="kpi-grid">
+            <div class="kpi-card gradient-blue">
+                <div class="kpi-label">Top Device</div>
+                <div class="kpi-value" id="kpi-top-name">—</div>
+                <div class="kpi-sub" id="kpi-top-power">0 W</div>
+            </div>
+            <div class="kpi-card gradient-green">
+                <div class="kpi-label">Avg Daily</div>
+                <div class="kpi-value" id="kpi-avg-daily">0 W</div>
+                <div class="kpi-sub">Average power</div>
+            </div>
+            <div class="kpi-card gradient-orange">
+                <div class="kpi-label">Avg Weekly</div>
+                <div class="kpi-value" id="kpi-avg-weekly">0 W</div>
+                <div class="kpi-sub">Average power</div>
+            </div>
+            <div class="kpi-card gradient-purple">
+                <div class="kpi-label">Avg Monthly</div>
+                <div class="kpi-value" id="kpi-avg-monthly">0 W</div>
+                <div class="kpi-sub">Average power</div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-calendar-day"></i> Daily Usage</h2>
+                </div>
+                <div class="panel-content" style="height:320px">
+                    <canvas id="chart-daily"></canvas>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-calendar-week"></i> Weekly Usage</h2>
+                </div>
+                <div class="panel-content" style="height:320px">
+                    <canvas id="chart-weekly"></canvas>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-calendar-alt"></i> Monthly Usage</h2>
+                </div>
+                <div class="panel-content" style="height:320px">
+                    <canvas id="chart-monthly"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctxDaily = document.getElementById('chart-daily');
+    const ctxWeekly = document.getElementById('chart-weekly');
+    const ctxMonthly = document.getElementById('chart-monthly');
+    let dailyChart, weeklyChart, monthlyChart;
+
+    function gradient(ctx, color) {
+        const g = ctx.createLinearGradient(0, 0, 0, 280);
+        g.addColorStop(0, color.replace('1)', '0.35)'));
+        g.addColorStop(1, color.replace('1)', '0.02)'));
+        return g;
+    }
+
+    function buildLineConfig(labels, data, colorHue) {
+        const color = `hsla(${colorHue}, 80%, 50%, 1)`;
+        const context = document.createElement('canvas').getContext('2d');
+        return {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    data,
+                    borderColor: color,
+                    backgroundColor: gradient(context, color.replace('1)', '1)')),
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 0,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: true }
+                },
+                scales: {
+                    x: { ticks: { maxTicksLimit: 8 } },
+                    y: { beginAtZero: true }
+                },
+                hover: { mode: 'nearest', intersect: false }
+            }
+        };
+    }
+
+    function fmtDate(d) {
+        try { return new Date(d).toLocaleDateString(); } catch (e) { return d; }
+    }
+
+    function avg(arr) {
+        if (!arr || !arr.length) return 0;
+        return Math.round(arr.reduce((a,b)=>a+b,0) / arr.length);
+    }
+
+    function updateKpis(summary) {
+        const top = (summary.top_devices && summary.top_devices[0]) || {name:'—', avg_power:0};
+        document.getElementById('kpi-top-name').textContent = top.name;
+        document.getElementById('kpi-top-power').textContent = `${Math.round(top.avg_power)} W`;
+        document.getElementById('kpi-avg-daily').textContent = `${avg(summary.daily?.map(x=>x.value))} W`;
+        document.getElementById('kpi-avg-weekly').textContent = `${avg(summary.weekly?.map(x=>x.value))} W`;
+        document.getElementById('kpi-avg-monthly').textContent = `${avg(summary.monthly?.map(x=>x.value))} W`;
+    }
+
+    function renderCharts(summary) {
+        const dailyLabels = (summary.daily||[]).map(x=>fmtDate(x.date));
+        const dailyValues = (summary.daily||[]).map(x=>x.value);
+        const weeklyLabels = (summary.weekly||[]).map(x=>fmtDate(x.date));
+        const weeklyValues = (summary.weekly||[]).map(x=>x.value);
+        const monthlyLabels = (summary.monthly||[]).map(x=>fmtDate(x.date));
+        const monthlyValues = (summary.monthly||[]).map(x=>x.value);
+
+        dailyChart && dailyChart.destroy();
+        weeklyChart && weeklyChart.destroy();
+        monthlyChart && monthlyChart.destroy();
+
+        dailyChart = new Chart(ctxDaily, buildLineConfig(dailyLabels, dailyValues, 210));
+        weeklyChart = new Chart(ctxWeekly, buildLineConfig(weeklyLabels, weeklyValues, 140));
+        monthlyChart = new Chart(ctxMonthly, buildLineConfig(monthlyLabels, monthlyValues, 280));
+    }
+
+    function fetchSummary() {
+        const range = document.getElementById('analytics-range').value;
+        const room = document.getElementById('analytics-room').value;
+        const devices = document.getElementById('analytics-devices').value;
+
+        let params = new URLSearchParams();
+        const now = new Date();
+        const days = parseInt(range);
+        const start = new Date(now.getTime() - (parseInt(range) || 30) * 24 * 3600 * 1000);
+        params.set('start', start.toISOString());
+        params.set('end', now.toISOString());
+        if (room) params.set('room', room);
+        if (devices) devices.split(',').map(x=>x.trim()).filter(Boolean).forEach(d=>params.append('device', d));
+
+        fetch(`/api/usage/summary/?${params.toString()}`)
+            .then(r=>r.json())
+            .then(summary => {
+                updateKpis(summary);
+                renderCharts(summary);
+            })
+            .catch(err => console.error('Failed to load analytics summary', err));
+    }
+
+    document.getElementById('apply-analytics').addEventListener('click', fetchSummary);
+    fetchSummary();
+});
+</script>
+{% endblock %}

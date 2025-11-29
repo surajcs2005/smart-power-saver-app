@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Sign Up - Smart Power Saver{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card glass-surface">
+        <div class="auth-header">
+            <i class="fas fa-user-plus" style="color:#a78bfa"></i>
+            <h2>Create Account</h2>
+            <p class="muted">Use your email to sign up</p>
+        </div>
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            {% if form.errors %}
+                <div class="auth-error">Please fix the highlighted fields.</div>
+            {% endif %}
+            <div class="form-group">
+                <label for="id_username">Username</label>
+                {{ form.username }}
+            </div>
+            <div class="form-group">
+                <label for="id_email">Email</label>
+                {{ form.email }}
+            </div>
+            <div class="form-group">
+                <label for="id_password1">Password</label>
+                {{ form.password1 }}
+            </div>
+            <div class="form-group">
+                <label for="id_password2">Confirm Password</label>
+                {{ form.password2 }}
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%">
+                <i class="fas fa-user-check"></i> Create Account
+            </button>
+        </form>
+        <div class="auth-footer">
+            <a class="muted" href="{% url 'login' %}">Already have an account? Sign in</a>
+        </div>
+    </div>
+    <style>
+        .auth-page { display:flex; align-items:center; justify-content:center; min-height:60vh; }
+        .auth-card { width:100%; max-width:420px; padding:1.5rem; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); }
+        .auth-header { text-align:center; margin-bottom:1rem; }
+        .auth-header i { font-size:2rem; }
+        .auth-header h2 { margin-top:.5rem; }
+        .auth-error { background:#fee2e2; color:#991b1b; padding:.75rem; border-radius:.5rem; margin-bottom:1rem; }
+        .auth-footer { text-align:center; margin-top: .75rem; }
+        .auth-form input { width:100%; padding:0.75rem; border:1px solid var(--border-color); border-radius: var(--radius-md); background: var(--card-bg); color: var(--text-primary); }
+        .auth-form input:focus { outline:none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    </style>
+</div>
+{% endblock %}
+
